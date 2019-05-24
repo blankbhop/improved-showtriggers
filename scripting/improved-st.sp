@@ -19,13 +19,15 @@
 
 int g_iEffects = -1;
 bool g_bShowTriggers[MAXPLAYERS + 1];
-
+//int effectFlags[MAXPLAYERS + 1];
+//int edictFlags[MAXPLAYERS + 1];
+int g_iTransmit;
 public Plugin myinfo =
 {
-	name = "Show Triggers",
-	author = "Ici, Eric, Blank",
-	description = "Make trigger brushes visible.",
-	version = PLUGIN_VERSION,
+    name = "Show Triggers",
+    author = "Ici, Eric, Blank",
+    description = "Make trigger brushes visible.",
+    version = PLUGIN_VERSION,
 	url = "http://steamcommunity.com/id/1ci & https://steamcommunity.com/id/-eric"
 };
 
@@ -72,12 +74,10 @@ public void OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		{
 			SetEntityRenderColor(entity, 0, 0, 0, 0);
 		}
-
 		int count = GetOutputCount(entity, "m_OnStartTouch");
 		for (int i = 0; i < count; i++)
 		{
 			GetOutputParameter(entity, "m_OnStartTouch", i, buffer);
-
 			// Gravity anti-pre
 			// https://gamebanana.com/prefabs/6760
 			if (StrEqual(buffer, "gravity 40"))
@@ -137,28 +137,38 @@ public Action CommandShowTriggers(int client, int args)
 	}
 
 	g_bShowTriggers[client] = !g_bShowTriggers[client];
-	TransmitTriggers(client);
+	//TransmitTriggers(client);
 
 	if (g_bShowTriggers[client])
 	{
+		g_iTransmit++;
 		CPrintToChat(client, "{prefix}[Triggers] {text}Displaying triggers.");
 		CPrintToChat(client, "{prefix}[Triggers] {text}Use {variable}!stmenu {text}to view the color descriptions.");
 	}
 	else
 	{
+		g_iTransmit--;
 		CPrintToChat(client, "{prefix}[Triggers] {text}Stopped displaying triggers.");
 	}
-
+    
+	TransmitTriggers(g_iTransmit > 0);
+    
 	return Plugin_Handled;
 }
 
-void TransmitTriggers(int client)
+void TransmitTriggers(bool transmit)
 {
+	static bool s_bHook = false;
+	if (s_bHook == transmit)
+	{
+		return;
+	}
+
 	char buffer[8];
 	int entityCount = GetEntityCount();
 
 	// Loop through entities
-	for (int i = MaxClients + 1; i < entityCount; i++)
+	for (int i = MaxClients + 1; i <= entityCount; i++)
 	{
 		if (!IsValidEdict(i))
 		{
@@ -171,7 +181,7 @@ void TransmitTriggers(int client)
 		{
 			continue;
 		}
-
+	
 		// Is this entity's model a VBSP model?
 		GetEntPropString(i, Prop_Data, "m_ModelName", buffer, sizeof(buffer));
 		if (buffer[0] != '*')
@@ -186,7 +196,7 @@ void TransmitTriggers(int client)
 		int edictFlags = GetEdictFlags(i);
 
 		// Determine whether to show triggers or not
-		if (g_bShowTriggers[client])
+		if (transmit)
 		{
 			effectFlags &= ~EF_NODRAW;
 			edictFlags &= ~FL_EDICT_DONTSEND;
@@ -196,14 +206,13 @@ void TransmitTriggers(int client)
 			effectFlags |= EF_NODRAW;
 			edictFlags |= FL_EDICT_DONTSEND;
 		}
-
 		// Apply state changes
 		SetEntData(i, g_iEffects, effectFlags);
 		ChangeEdictState(i, g_iEffects);
 		SetEdictFlags(i, edictFlags);
 
 		// Should we hook?
-		if (g_bShowTriggers[client])
+		if (transmit)
 		{
 			SDKHook(i, SDKHook_SetTransmit, OnSetTransmit);
 		}
