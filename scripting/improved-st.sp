@@ -19,8 +19,6 @@
 
 int g_iEffects = -1;
 bool g_bShowTriggers[MAXPLAYERS + 1];
-//int effectFlags[MAXPLAYERS + 1];
-//int edictFlags[MAXPLAYERS + 1];
 int g_iTransmit;
 public Plugin myinfo =
 {
@@ -137,7 +135,6 @@ public Action CommandShowTriggers(int client, int args)
 	}
 
 	g_bShowTriggers[client] = !g_bShowTriggers[client];
-	//TransmitTriggers(client);
 
 	if (g_bShowTriggers[client])
 	{
