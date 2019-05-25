@@ -187,6 +187,11 @@ void TransmitTriggers(bool transmit)
 			// Skipping in order to avoid console spam.
 			continue;
 		}
+		
+		if(!GetEntProp(i, Prop_Data, "m_spawnflags"))
+		{
+			continue;
+		}
 
 		// Get flags
 		int effectFlags = GetEntData(i, g_iEffects);
