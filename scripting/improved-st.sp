@@ -1,6 +1,7 @@
 #include <sourcemod>
 #include <sdkhooks>
 #include <sdktools>
+#undef REQUIRE_EXTENSIONS
 #include <outputinfo>
 #include <improved-st>
 
