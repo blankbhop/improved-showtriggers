@@ -423,3 +423,12 @@ public Action hookST_triggerTeleportRelative(int entity, int client)
 	}
 	return Plugin_Handled;
 }
+
+stock bool IsValidClient(int client, bool nobots = true)
+{ 
+    if (client <= 0 || client > MaxClients || !IsClientConnected(client) || (nobots && IsFakeClient(client)))
+    {
+        return false; 
+    }
+    return IsClientInGame(client); 
+} 
